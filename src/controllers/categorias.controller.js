@@ -1,7 +1,7 @@
 import { pool } from '../db.js';
 
 // Obtener todas las categorias
-export const obtenerCategorias= async (req, res) => {
+export const obtenerCategorias = async (req, res) => {
   try {
     const [result] = await pool.query('SELECT * FROM Categorias');
     res.json(result);
@@ -26,16 +26,19 @@ export const obtenerCategoria = async (req, res) => {
     res.json(result[0]);
   } catch (error) {
     return res.status(500).json({
-      mensaje: 'Ha ocurrido un error al leer los datos del cliente.'
+      mensaje: 'Ha ocurrido un error al leer los datos de la categoría.',
+      error: error
     });
   }
-};// Registrar una nueva categoría
+};
+
+// Registrar una nueva categoría
 export const registrarCategoria = async (req, res) => {
   try {
     const { nombre_categoria, descripcion_categoria } = req.body;
 
     const [result] = await pool.query(
-      'INSERT INTO categorias (nombre_categoria, descripcion_categoria) VALUES (?, ?)',
+      'INSERT INTO Categorias (nombre_categoria, descripcion_categoria) VALUES (?, ?)',
       [nombre_categoria, descripcion_categoria]
     );
 
@@ -47,3 +50,5 @@ export const registrarCategoria = async (req, res) => {
     });
   }
 };
+
+// Actualizar una categoría por ID
