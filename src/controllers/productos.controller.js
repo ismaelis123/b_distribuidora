@@ -31,6 +31,27 @@ export const obtenerProducto = async (req, res) => {
   }
 };
 
+// Buscar productos por nombre o descripción
+export const buscarProductos = async (req, res) => {
+  try {
+    const { termino } = req.query;
+    const [result] = await pool.query(
+      `SELECT * FROM Productos WHERE nombre_producto LIKE ? OR descripcion_producto LIKE ?`,
+      [`%${termino}%`, `%${termino}%`]
+    );
+
+    if (result.length <= 0) {
+      return res.status(404).json({ mensaje: 'No se encontraron resultados para la búsqueda.' });
+    }
+    res.json(result);
+  } catch (error) {
+    return res.status(500).json({
+      mensaje: 'Error al realizar la búsqueda.',
+      error
+    });
+  }
+};
+
 // Registrar un nuevo producto
 export const registrarProducto = async (req, res) => {
   try {
@@ -54,11 +75,11 @@ export const registrarProducto = async (req, res) => {
       'INSERT INTO Productos (nombre_producto, descripcion_producto, id_categoria, precio_unitario, stock, imagen) VALUES (?, ?, ?, ?, ?, ?)',
       [
         nombre_producto,
-        descripcion_producto || null, // Puede ser opcional
+        descripcion_producto || null,
         id_categoria,
         precio_unitario,
         stock,
-        imagen || null // Puede ser opcional
+        imagen || null
       ]
     );
 
@@ -69,6 +90,78 @@ export const registrarProducto = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       mensaje: 'Ha ocurrido un error al registrar el producto.',
+      error: error.message
+    });
+  }
+};
+
+// Actualizar producto por ID
+export const actualizarProducto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      nombre_producto,
+      descripcion_producto,
+      id_categoria,
+      precio_unitario,
+      stock,
+      imagen
+    } = req.body;
+
+    // Validación básica de campos requeridos
+    if (!nombre_producto || !id_categoria || !precio_unitario || !stock) {
+      return res.status(400).json({
+        mensaje: 'Faltan campos requeridos: nombre, categoría, precio o stock.'
+      });
+    }
+
+    const [result] = await pool.query(
+      `UPDATE Productos SET 
+        nombre_producto = ?, 
+        descripcion_producto = ?, 
+        id_categoria = ?, 
+        precio_unitario = ?, 
+        stock = ?, 
+        imagen = ? 
+      WHERE id_producto = ?`,
+      [
+        nombre_producto,
+        descripcion_producto || null,
+        id_categoria,
+        precio_unitario,
+        stock,
+        imagen || null,
+        id
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ mensaje: `No se encontró el producto con ID ${id}.` });
+    }
+
+    res.json({ mensaje: `Producto con ID ${id} actualizado correctamente.` });
+  } catch (error) {
+    return res.status(500).json({
+      mensaje: 'Error al actualizar el producto.',
+      error: error.message
+    });
+  }
+};
+
+// Eliminar producto por ID
+export const eliminarProducto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [result] = await pool.query('DELETE FROM Productos WHERE id_producto = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ mensaje: `No se encontró el producto con ID ${id}.` });
+    }
+
+    res.json({ mensaje: `Producto con ID ${id} eliminado correctamente.` });
+  } catch (error) {
+    return res.status(500).json({
+      mensaje: 'Error al eliminar el producto.',
       error: error.message
     });
   }
