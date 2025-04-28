@@ -7,6 +7,7 @@ import rutasCategorias from './routes/categorias.routes.js';
 import rutasVentas from './routes/ventas.routes.js'
 import rutasCompras from './routes/compras.routes.js'
 import rutasEmpleados from './routes/empleados.routes.js'
+import rutasDetallesVentas from './routes/detalles_ventas.routes.js'
 const app = express();
 
 // Habilitar CORS para cualquier origen
@@ -24,6 +25,7 @@ app.use('/api', rutasCategorias);
 app.use('/api', rutasVentas);
 app.use('/api', rutasCompras);
 app.use('/api', rutasEmpleados);
+app.use('/api', rutasDetallesVentas);
 
 
 
