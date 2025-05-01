@@ -58,4 +58,56 @@ export const obtenerVentasConDetalles = async (req, res) => {
       error: error
     });
   }
+
+  
+};
+
+// Registrar una nueva venta con detalles
+export const registrarVenta = async (req, res) => {
+  const { id_cliente, id_empleado, fecha_venta, total_venta, detalles } = req.body;
+
+  try {
+    const fechaVentaFormateada = new Date(fecha_venta).toISOString().slice(0, 19).replace('T', ' '); // Convierte a 'YYYY-MM-DD HH:mm:ss'
+    const [ventaResult] = await pool.query(
+      'INSERT INTO Ventas (id_cliente, id_empleado, fecha_venta, total_venta) VALUES (?, ?, ?, ?)',
+      [id_cliente, id_empleado, fechaVentaFormateada, total_venta]
+    );
+
+    const id_venta = ventaResult.insertId;
+
+    for (const detalle of detalles) {
+      await pool.query(
+        'INSERT INTO Detalles_Ventas (id_venta, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)',
+        [id_venta, detalle.id_producto, detalle.cantidad, detalle.precio_unitario]
+      );
+      await pool.query(
+        'UPDATE Productos SET stock = stock - ? WHERE id_producto = ?',
+        [detalle.cantidad, detalle.id_producto]
+      );
+    }
+
+    res.json({ mensaje: 'Venta registrada correctamente' });
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error al registrar la venta', error: error.message });
+  }
+};
+
+// Eliminar una venta (los detalles se eliminan automáticamente por ON DELETE CASCADE)
+export const eliminarVenta = async (req, res) => {
+  try {
+    const { id_venta } = req.params;
+
+    const [result] = await pool.query('DELETE FROM Ventas WHERE id_venta = ?', [id_venta]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ mensaje: 'Venta no encontrada' });
+    }
+
+    res.json({ mensaje: 'Venta y sus detalles eliminados correctamente' });
+  } catch (error) {
+    return res.status(500).json({
+      mensaje: 'Error al eliminar la venta',
+      error: error.message,
+    });
+  }
 };
