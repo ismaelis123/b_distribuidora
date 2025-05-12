@@ -21,13 +21,11 @@ export const obtenerDetallesCompra = async (req, res) => {
     `,
       [id]
     );
-
     if (result.length === 0) {
       return res.status(404).json({
         mensaje: 'No se encontraron detalles para esta compra.',
       });
     }
-
     res.json(result);
   } catch (error) {
     return res.status(500).json({
